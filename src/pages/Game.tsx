@@ -91,13 +91,26 @@ const Game = () => {
         const webcamInstance = new tmPose.Webcam(size, size, flip);
         await webcamInstance.setup();
         await webcamInstance.play();
-        setWebcam(webcamInstance);
-
-        // Append webcam to container
-        if (webcamRef.current && webcamInstance.canvas) {
+        
+        // Append webcam to container - use webcam element directly
+        if (webcamRef.current) {
           webcamRef.current.innerHTML = '';
-          webcamRef.current.appendChild(webcamInstance.canvas);
+          // tmPose.Webcam creates a canvas element after setup/play
+          if (webcamInstance.canvas) {
+            webcamInstance.canvas.style.width = '100%';
+            webcamInstance.canvas.style.height = '100%';
+            webcamInstance.canvas.style.objectFit = 'cover';
+            webcamRef.current.appendChild(webcamInstance.canvas);
+          } else if (webcamInstance.webcam) {
+            // Fallback: use underlying video element
+            webcamInstance.webcam.style.width = '100%';
+            webcamInstance.webcam.style.height = '100%';
+            webcamInstance.webcam.style.objectFit = 'cover';
+            webcamRef.current.appendChild(webcamInstance.webcam);
+          }
         }
+        
+        setWebcam(webcamInstance);
 
         setIsLoading(false);
         setGameActive(true);
