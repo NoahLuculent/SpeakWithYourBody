@@ -11,21 +11,25 @@ const Index = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const ensureTrailingSlash = (url: string) => (url.endsWith('/') ? url : `${url}/`);
+
   const handleStart = () => {
-    if (!modelUrl.trim()) {
+    const trimmed = modelUrl.trim();
+
+    if (!trimmed) {
       setError('Please enter a valid model URL');
       return;
     }
 
     // Validate URL format
-    if (!modelUrl.includes('teachablemachine.withgoogle.com')) {
+    if (!trimmed.includes('teachablemachine.withgoogle.com')) {
       setError('Please enter a valid Teachable Machine model URL');
       return;
     }
 
     // Clear previous game state and save new model URL
     clearGameState();
-    saveGameState({ modelUrl: modelUrl.trim() });
+    saveGameState({ modelUrl: ensureTrailingSlash(trimmed) });
     navigate('/game');
   };
 
