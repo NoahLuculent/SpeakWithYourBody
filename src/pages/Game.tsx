@@ -7,7 +7,14 @@ import { ConfettiEffect } from '@/components/ConfettiEffect';
 import { getGameState, saveGameState, addCapturedImage } from '@/lib/gameStore';
 import { Progress } from '@/components/ui/progress';
 import { Clock, Trophy, Target } from 'lucide-react';
-import * as tmPose from '@teachablemachine/pose';
+
+// Use CDN-loaded tmPose from window
+declare global {
+  interface Window {
+    tmPose: any;
+  }
+}
+const tmPose = window.tmPose;
 
 const GAME_DURATION = 180; // 3 minutes in seconds
 const THRESHOLD = 0.7; // 70%
@@ -18,8 +25,8 @@ const Game = () => {
   const webcamRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
-  const [model, setModel] = useState<tmPose.CustomPoseNet | null>(null);
-  const [webcam, setWebcam] = useState<tmPose.Webcam | null>(null);
+  const [model, setModel] = useState<any>(null);
+  const [webcam, setWebcam] = useState<any>(null);
   const [labels, setLabels] = useState<string[]>([]);
   const [usedLabels, setUsedLabels] = useState<string[]>([]);
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
