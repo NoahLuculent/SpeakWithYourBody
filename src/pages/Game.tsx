@@ -11,10 +11,20 @@ import { Clock, Trophy, Target } from 'lucide-react';
 // Use CDN-loaded tmPose from window
 declare global {
   interface Window {
-    tmPose: any;
+    tmPose?: any;
   }
 }
-const tmPose = window.tmPose;
+
+const ensureTrailingSlash = (url: string) => (url.endsWith('/') ? url : `${url}/`);
+
+const waitForTmPose = async (timeoutMs = 8000) => {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    if (typeof window !== 'undefined' && window.tmPose) return window.tmPose;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  return null;
+};
 
 const GAME_DURATION = 180; // 3 minutes in seconds
 const THRESHOLD = 0.7; // 70%
@@ -56,11 +66,17 @@ const Game = () => {
 
       try {
         setIsLoading(true);
-        
+
+        const tmPose = await waitForTmPose();
+        if (!tmPose) {
+          throw new Error('tmPose is not available. CDN scripts failed to load.');
+        }
+
         // Load the model
-        const modelURL = gameState.modelUrl + 'model.json';
-        const metadataURL = gameState.modelUrl + 'metadata.json';
-        
+        const baseUrl = ensureTrailingSlash(gameState.modelUrl);
+        const modelURL = baseUrl + 'model.json';
+        const metadataURL = baseUrl + 'metadata.json';
+
         const loadedModel = await tmPose.load(modelURL, metadataURL);
         setModel(loadedModel);
 
