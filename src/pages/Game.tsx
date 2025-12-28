@@ -97,21 +97,19 @@ const Game = () => {
         await webcamInstance.setup();
         await webcamInstance.play();
 
-        // Append webcam to container - use webcam element directly
+        // Append webcam video element directly (not canvas)
+        // tmPose.Webcam.canvas only updates when update() is called
+        // So we show the raw video element for live preview
         if (webcamRef.current) {
           webcamRef.current.innerHTML = "";
-          // tmPose.Webcam creates a canvas element after setup/play
-          if (webcamInstance.canvas) {
-            webcamInstance.canvas.style.width = "100%";
-            webcamInstance.canvas.style.height = "100%";
-            webcamInstance.canvas.style.objectFit = "cover";
-            webcamRef.current.appendChild(webcamInstance.canvas);
-          } else if (webcamInstance.webcam) {
-            // Fallback: use underlying video element
-            webcamInstance.webcam.style.width = "100%";
-            webcamInstance.webcam.style.height = "100%";
-            webcamInstance.webcam.style.objectFit = "cover";
-            webcamRef.current.appendChild(webcamInstance.webcam);
+          // Use the underlying video element for live display
+          const videoElement = webcamInstance.webcam as HTMLVideoElement;
+          if (videoElement) {
+            videoElement.style.width = "100%";
+            videoElement.style.height = "100%";
+            videoElement.style.objectFit = "cover";
+            videoElement.style.transform = "scaleX(-1)"; // Mirror the video
+            webcamRef.current.appendChild(videoElement);
           }
         }
 
