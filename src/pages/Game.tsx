@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Fireworks } from "@/components/Fireworks";
 import { SuccessAnimation } from "@/components/SuccessAnimation";
 import { ConfettiEffect } from "@/components/ConfettiEffect";
+import { CorrectMark } from "@/components/CorrectMark";
 import { getGameState, saveGameState, addCapturedImage } from "@/lib/gameStore";
 import { Progress } from "@/components/ui/progress";
 import { Clock, Trophy, Target } from "lucide-react";
@@ -47,6 +48,7 @@ const Game = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showCorrectMark, setShowCorrectMark] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [gameActive, setGameActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -269,6 +271,7 @@ const Game = () => {
     setCapturedImage(imageData);
     setShowSuccess(true);
     setShowConfetti(true);
+    setShowCorrectMark(true);
 
     // Update score
     setScore((prev) => prev + 1);
@@ -344,6 +347,10 @@ const Game = () => {
         onComplete={() => setShowSuccess(false)}
       />
       <ConfettiEffect active={showConfetti} />
+      <CorrectMark
+        show={showCorrectMark}
+        onComplete={() => setShowCorrectMark(false)}
+      />
 
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-20 p-4">
