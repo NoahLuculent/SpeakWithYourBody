@@ -94,23 +94,15 @@ const Game = () => {
         const size = 400;
         const flip = true;
         const webcamInstance = new tmPose.Webcam(size, size, flip);
-        await webcamInstance.setup();
+        await webcamInstance.setup({ facingMode: "user" }); // Request user-facing camera
         await webcamInstance.play();
 
-        // Append webcam video element directly (not canvas)
-        // tmPose.Webcam.canvas only updates when update() is called
-        // So we show the raw video element for live preview
-        if (webcamRef.current) {
+        // Append webcam to container
+        if (webcamRef.current && webcamInstance.webcam) {
           webcamRef.current.innerHTML = "";
-          // Use the underlying video element for live display
-          const videoElement = webcamInstance.webcam as HTMLVideoElement;
-          if (videoElement) {
-            videoElement.style.width = "100%";
-            videoElement.style.height = "100%";
-            videoElement.style.objectFit = "cover";
-            videoElement.style.transform = "scaleX(-1)"; // Mirror the video
-            webcamRef.current.appendChild(videoElement);
-          }
+          webcamRef.current.appendChild(webcamInstance.webcam);
+        } else {
+          throw new Error("Webcam video element could not be created.");
         }
 
         setWebcam(webcamInstance);
@@ -119,7 +111,26 @@ const Game = () => {
         setGameActive(true);
       } catch (err) {
         console.error("Error initializing game:", err);
-        setError("Failed to load model. Please check the URL and try again.");
+        let errorMessage = "Failed to initialize the game.";
+        if (err instanceof Error) {
+          if (
+            err.message.includes("Permission") ||
+            err.message.includes("denied")
+          ) {
+            errorMessage =
+              "Camera permission denied. Please allow camera access in your browser settings and refresh.";
+          } else if (err.message.includes("tmPose")) {
+            errorMessage =
+              "The Teachable Machine script failed to load. Please check your internet connection.";
+          } else if (err.message.includes("model")) {
+            errorMessage =
+              "Failed to load the pose model. Please check the URL and your network connection.";
+          } else if (err.message.includes("Webcam")) {
+            errorMessage =
+              "Could not access the webcam. Please ensure it is connected and not in use by another application.";
+          }
+        }
+        setError(errorMessage);
         setIsLoading(false);
       }
     };
@@ -140,6 +151,24 @@ const Game = () => {
     };
   }, [navigate]);
 
+  const endGame = useCallback(() => {
+    setGameActive(false);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+
+    // Calculate time bonus (0.1 points per 10 seconds remaining)
+    const timeBonus = Math.floor(timeLeft / 10) * 0.1;
+    const finalScore = score + timeBonus;
+
+    saveGameState({
+      score: finalScore,
+      timeBonus,
+    });
+
+    navigate("/score");
+  }, [navigate, score, timeLeft]);
+
   // Game timer
   useEffect(() => {
     if (gameActive && timeLeft > 0) {
@@ -159,7 +188,41 @@ const Game = () => {
         clearInterval(timerRef.current);
       }
     };
-  }, [gameActive]);
+  }, [gameActive, endGame, timeLeft]);
+
+  const handleThresholdReached = useCallback(() => {
+    if (!webcam || !selectedLabel) return;
+
+    // Capture image
+    const canvas = webcam.canvas;
+    const imageData = canvas.toDataURL("image/png");
+
+    // Save captured image
+    addCapturedImage(selectedLabel, imageData);
+    setCapturedImage(imageData);
+    setShowSuccess(true);
+    setShowConfetti(true);
+    setShowCorrectMark(true);
+
+    // Update score
+    setScore((prev) => prev + 1);
+
+    // Mark label as used
+    setUsedLabels((prev) => [...prev, selectedLabel]);
+
+    // Clear selection after display time
+    captureTimeoutRef.current = setTimeout(() => {
+      setCapturedImage(null);
+      setSelectedLabel(null);
+      setShowConfetti(false);
+
+      // Check if all labels are used
+      const newUsedLabels = [...usedLabels, selectedLabel];
+      if (newUsedLabels.length >= labels.length) {
+        endGame();
+      }
+    }, CAPTURE_DISPLAY_TIME);
+  }, [webcam, selectedLabel, endGame, labels.length, usedLabels]);
 
   // Prediction loop
   const predict = useCallback(async () => {
@@ -170,10 +233,10 @@ const Game = () => {
     const predictions = await model.predict(posenetOutput);
 
     // Draw pose on canvas
-    if (canvasRef.current && pose) {
+    if (canvasRef.current && pose && webcam.canvas) {
       const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
-        ctx.clearRect(0, 0, 400, 400);
+        ctx.drawImage(webcam.canvas, 0, 0);
 
         // Draw keypoints
         if (pose.keypoints) {
@@ -243,7 +306,14 @@ const Game = () => {
     }
 
     animationFrameRef.current = requestAnimationFrame(predict);
-  }, [model, webcam, gameActive, selectedLabel, capturedImage]);
+  }, [
+    model,
+    webcam,
+    gameActive,
+    selectedLabel,
+    capturedImage,
+    handleThresholdReached,
+  ]);
 
   useEffect(() => {
     if (gameActive && selectedLabel && !capturedImage) {
@@ -256,58 +326,6 @@ const Game = () => {
       }
     };
   }, [predict, gameActive, selectedLabel, capturedImage]);
-
-  const handleThresholdReached = () => {
-    if (!webcam || !selectedLabel) return;
-
-    // Capture image
-    const canvas = webcam.canvas;
-    const imageData = canvas.toDataURL("image/png");
-
-    // Save captured image
-    addCapturedImage(selectedLabel, imageData);
-    setCapturedImage(imageData);
-    setShowSuccess(true);
-    setShowConfetti(true);
-    setShowCorrectMark(true);
-
-    // Update score
-    setScore((prev) => prev + 1);
-
-    // Mark label as used
-    setUsedLabels((prev) => [...prev, selectedLabel]);
-
-    // Clear selection after display time
-    captureTimeoutRef.current = setTimeout(() => {
-      setCapturedImage(null);
-      setSelectedLabel(null);
-      setShowConfetti(false);
-
-      // Check if all labels are used
-      const newUsedLabels = [...usedLabels, selectedLabel];
-      if (newUsedLabels.length >= labels.length) {
-        endGame();
-      }
-    }, CAPTURE_DISPLAY_TIME);
-  };
-
-  const endGame = () => {
-    setGameActive(false);
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-
-    // Calculate time bonus (0.1 points per 10 seconds remaining)
-    const timeBonus = Math.floor(timeLeft / 10) * 0.1;
-    const finalScore = score + timeBonus;
-
-    saveGameState({
-      score: finalScore,
-      timeBonus,
-    });
-
-    navigate("/score");
-  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -396,15 +414,14 @@ const Game = () => {
             <div className="relative mb-6">
               <div className="glass-card p-2 rounded-2xl gold-glow">
                 <div className="relative w-[400px] h-[400px] rounded-xl overflow-hidden bg-midnight-light">
-                  {/* Webcam feed */}
-                  <div ref={webcamRef} className="absolute inset-0" />
-
+                  {/* Hidden div for the webcam video element */}
+                  <div ref={webcamRef} style={{ position: "absolute", top: "-9999px" }} />
                   {/* Pose overlay */}
                   <canvas
                     ref={canvasRef}
                     width={400}
                     height={400}
-                    className="absolute inset-0 pointer-events-none"
+                    className="absolute inset-0"
                   />
 
                   {/* Captured image overlay */}
