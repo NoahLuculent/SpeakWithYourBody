@@ -357,6 +357,8 @@ const Game = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
+      {/* Hidden div for the webcam video element, always rendered */}
+      <div ref={webcamRef} style={{ position: "absolute", top: "-9999px" }} />
       <Fireworks />
       <SuccessAnimation
         show={showSuccess}
@@ -414,8 +416,6 @@ const Game = () => {
             <div className="relative mb-6">
               <div className="glass-card p-2 rounded-2xl gold-glow">
                 <div className="relative w-[400px] h-[400px] rounded-xl overflow-hidden bg-midnight-light">
-                  {/* Hidden div for the webcam video element */}
-                  <div ref={webcamRef} style={{ position: "absolute", top: "-9999px" }} />
                   {/* Pose overlay */}
                   <canvas
                     ref={canvasRef}
