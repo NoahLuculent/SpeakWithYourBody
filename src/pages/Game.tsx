@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Fireworks } from '@/components/Fireworks';
-import { SuccessAnimation } from '@/components/SuccessAnimation';
-import { ConfettiEffect } from '@/components/ConfettiEffect';
-import { getGameState, saveGameState, addCapturedImage } from '@/lib/gameStore';
-import { Progress } from '@/components/ui/progress';
-import { Clock, Trophy, Target } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Fireworks } from "@/components/Fireworks";
+import { SuccessAnimation } from "@/components/SuccessAnimation";
+import { ConfettiEffect } from "@/components/ConfettiEffect";
+import { getGameState, saveGameState, addCapturedImage } from "@/lib/gameStore";
+import { Progress } from "@/components/ui/progress";
+import { Clock, Trophy, Target } from "lucide-react";
 
 // Use CDN-loaded tmPose from window
 declare global {
@@ -15,12 +15,13 @@ declare global {
   }
 }
 
-const ensureTrailingSlash = (url: string) => (url.endsWith('/') ? url : `${url}/`);
+const ensureTrailingSlash = (url: string) =>
+  url.endsWith("/") ? url : `${url}/`;
 
 const waitForTmPose = async (timeoutMs = 8000) => {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
-    if (typeof window !== 'undefined' && window.tmPose) return window.tmPose;
+    if (typeof window !== "undefined" && window.tmPose) return window.tmPose;
     await new Promise((r) => setTimeout(r, 50));
   }
   return null;
@@ -34,7 +35,7 @@ const Game = () => {
   const navigate = useNavigate();
   const webcamRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   const [model, setModel] = useState<any>(null);
   const [webcam, setWebcam] = useState<any>(null);
   const [labels, setLabels] = useState<string[]>([]);
@@ -58,9 +59,9 @@ const Game = () => {
   useEffect(() => {
     const initGame = async () => {
       const gameState = getGameState();
-      
+
       if (!gameState.modelUrl) {
-        navigate('/');
+        navigate("/");
         return;
       }
 
@@ -69,13 +70,15 @@ const Game = () => {
 
         const tmPose = await waitForTmPose();
         if (!tmPose) {
-          throw new Error('tmPose is not available. CDN scripts failed to load.');
+          throw new Error(
+            "tmPose is not available. CDN scripts failed to load."
+          );
         }
 
         // Load the model
         const baseUrl = ensureTrailingSlash(gameState.modelUrl);
-        const modelURL = baseUrl + 'model.json';
-        const metadataURL = baseUrl + 'metadata.json';
+        const modelURL = baseUrl + "model.json";
+        const metadataURL = baseUrl + "metadata.json";
 
         const loadedModel = await tmPose.load(modelURL, metadataURL);
         setModel(loadedModel);
@@ -91,32 +94,32 @@ const Game = () => {
         const webcamInstance = new tmPose.Webcam(size, size, flip);
         await webcamInstance.setup();
         await webcamInstance.play();
-        
+
         // Append webcam to container - use webcam element directly
         if (webcamRef.current) {
-          webcamRef.current.innerHTML = '';
+          webcamRef.current.innerHTML = "";
           // tmPose.Webcam creates a canvas element after setup/play
           if (webcamInstance.canvas) {
-            webcamInstance.canvas.style.width = '100%';
-            webcamInstance.canvas.style.height = '100%';
-            webcamInstance.canvas.style.objectFit = 'cover';
+            webcamInstance.canvas.style.width = "100%";
+            webcamInstance.canvas.style.height = "100%";
+            webcamInstance.canvas.style.objectFit = "cover";
             webcamRef.current.appendChild(webcamInstance.canvas);
           } else if (webcamInstance.webcam) {
             // Fallback: use underlying video element
-            webcamInstance.webcam.style.width = '100%';
-            webcamInstance.webcam.style.height = '100%';
-            webcamInstance.webcam.style.objectFit = 'cover';
+            webcamInstance.webcam.style.width = "100%";
+            webcamInstance.webcam.style.height = "100%";
+            webcamInstance.webcam.style.objectFit = "cover";
             webcamRef.current.appendChild(webcamInstance.webcam);
           }
         }
-        
+
         setWebcam(webcamInstance);
 
         setIsLoading(false);
         setGameActive(true);
       } catch (err) {
-        console.error('Error initializing game:', err);
-        setError('Failed to load model. Please check the URL and try again.');
+        console.error("Error initializing game:", err);
+        setError("Failed to load model. Please check the URL and try again.");
         setIsLoading(false);
       }
     };
@@ -168,35 +171,55 @@ const Game = () => {
 
     // Draw pose on canvas
     if (canvasRef.current && pose) {
-      const ctx = canvasRef.current.getContext('2d');
+      const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
         ctx.clearRect(0, 0, 400, 400);
-        
+
         // Draw keypoints
         if (pose.keypoints) {
           pose.keypoints.forEach((keypoint) => {
             if (keypoint.score && keypoint.score > 0.5) {
               ctx.beginPath();
-              ctx.arc(keypoint.position.x, keypoint.position.y, 5, 0, 2 * Math.PI);
-              ctx.fillStyle = 'hsl(45, 93%, 58%)';
+              ctx.arc(
+                keypoint.position.x,
+                keypoint.position.y,
+                5,
+                0,
+                2 * Math.PI
+              );
+              ctx.fillStyle = "hsl(45, 93%, 58%)";
               ctx.fill();
             }
           });
 
           // Draw skeleton lines between adjacent keypoints
           const adjacentPairs: [number, number][] = [
-            [5, 6], [5, 7], [7, 9], [6, 8], [8, 10],
-            [5, 11], [6, 12], [11, 12], [11, 13], [13, 15],
-            [12, 14], [14, 16]
+            [5, 6],
+            [5, 7],
+            [7, 9],
+            [6, 8],
+            [8, 10],
+            [5, 11],
+            [6, 12],
+            [11, 12],
+            [11, 13],
+            [13, 15],
+            [12, 14],
+            [14, 16],
           ];
           adjacentPairs.forEach(([i, j]) => {
             const kp1 = pose.keypoints[i];
             const kp2 = pose.keypoints[j];
-            if (kp1?.score && kp1.score > 0.5 && kp2?.score && kp2.score > 0.5) {
+            if (
+              kp1?.score &&
+              kp1.score > 0.5 &&
+              kp2?.score &&
+              kp2.score > 0.5
+            ) {
               ctx.beginPath();
               ctx.moveTo(kp1.position.x, kp1.position.y);
               ctx.lineTo(kp2.position.x, kp2.position.y);
-              ctx.strokeStyle = 'hsl(45, 93%, 58%)';
+              ctx.strokeStyle = "hsl(45, 93%, 58%)";
               ctx.lineWidth = 2;
               ctx.stroke();
             }
@@ -206,7 +229,9 @@ const Game = () => {
     }
 
     // Find prediction for selected label
-    const selectedPrediction = predictions.find((p) => p.className === selectedLabel);
+    const selectedPrediction = predictions.find(
+      (p) => p.className === selectedLabel
+    );
     if (selectedPrediction) {
       const probability = selectedPrediction.probability;
       setCurrentPrediction(probability);
@@ -237,26 +262,26 @@ const Game = () => {
 
     // Capture image
     const canvas = webcam.canvas;
-    const imageData = canvas.toDataURL('image/png');
-    
+    const imageData = canvas.toDataURL("image/png");
+
     // Save captured image
     addCapturedImage(selectedLabel, imageData);
     setCapturedImage(imageData);
     setShowSuccess(true);
     setShowConfetti(true);
-    
+
     // Update score
     setScore((prev) => prev + 1);
-    
+
     // Mark label as used
     setUsedLabels((prev) => [...prev, selectedLabel]);
-    
+
     // Clear selection after display time
     captureTimeoutRef.current = setTimeout(() => {
       setCapturedImage(null);
       setSelectedLabel(null);
       setShowConfetti(false);
-      
+
       // Check if all labels are used
       const newUsedLabels = [...usedLabels, selectedLabel];
       if (newUsedLabels.length >= labels.length) {
@@ -270,23 +295,23 @@ const Game = () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-    
+
     // Calculate time bonus (0.1 points per 10 seconds remaining)
     const timeBonus = Math.floor(timeLeft / 10) * 0.1;
     const finalScore = score + timeBonus;
-    
+
     saveGameState({
       score: finalScore,
       timeBonus,
     });
-    
-    navigate('/score');
+
+    navigate("/score");
   };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const handleLabelSelect = (label: string) => {
@@ -299,9 +324,11 @@ const Game = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="glass-card p-8 rounded-2xl text-center max-w-md">
-          <h2 className="font-display text-2xl font-bold text-destructive mb-4">Error</h2>
+          <h2 className="font-display text-2xl font-bold text-destructive mb-4">
+            Error
+          </h2>
           <p className="text-muted-foreground mb-6">{error}</p>
-          <Button variant="gold" onClick={() => navigate('/')}>
+          <Button variant="gold" onClick={() => navigate("/")}>
             Go Back
           </Button>
         </div>
@@ -312,7 +339,10 @@ const Game = () => {
   return (
     <div className="min-h-screen relative overflow-hidden bg-background">
       <Fireworks />
-      <SuccessAnimation show={showSuccess} onComplete={() => setShowSuccess(false)} />
+      <SuccessAnimation
+        show={showSuccess}
+        onComplete={() => setShowSuccess(false)}
+      />
       <ConfettiEffect active={showConfetti} />
 
       {/* Header */}
@@ -322,7 +352,9 @@ const Game = () => {
           <div className="glass-card px-6 py-3 rounded-xl flex items-center gap-3">
             <Trophy className="w-5 h-5 text-primary" />
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Score</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                Score
+              </p>
               <p className="text-2xl font-bold text-primary">{score}</p>
             </div>
           </div>
@@ -331,8 +363,14 @@ const Game = () => {
           <div className="glass-card px-6 py-3 rounded-xl flex items-center gap-3">
             <Clock className="w-5 h-5 text-foreground" />
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Time</p>
-              <p className={`text-2xl font-bold ${timeLeft <= 30 ? 'text-destructive' : 'text-foreground'}`}>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">
+                Time
+              </p>
+              <p
+                className={`text-2xl font-bold ${
+                  timeLeft <= 30 ? "text-destructive" : "text-foreground"
+                }`}
+              >
                 {formatTime(timeLeft)}
               </p>
             </div>
@@ -355,7 +393,7 @@ const Game = () => {
                 <div className="relative w-[400px] h-[400px] rounded-xl overflow-hidden bg-midnight-light">
                   {/* Webcam feed */}
                   <div ref={webcamRef} className="absolute inset-0" />
-                  
+
                   {/* Pose overlay */}
                   <canvas
                     ref={canvasRef}
@@ -382,7 +420,9 @@ const Game = () => {
                 <div className="absolute inset-0 flex items-center justify-center bg-background/60 rounded-2xl">
                   <div className="text-center p-6">
                     <Target className="w-12 h-12 text-primary mx-auto mb-3" />
-                    <p className="text-lg font-semibold text-foreground">Select a pose to match!</p>
+                    <p className="text-lg font-semibold text-foreground">
+                      Select a pose to match!
+                    </p>
                   </div>
                 </div>
               )}
@@ -392,7 +432,9 @@ const Game = () => {
             {selectedLabel && (
               <div className="w-full max-w-[400px] mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">{selectedLabel}</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {selectedLabel}
+                  </span>
                   <span className="text-sm font-bold text-primary">
                     {Math.round(currentPrediction * 100)}%
                   </span>
@@ -413,16 +455,24 @@ const Game = () => {
 
             {/* Label Selection */}
             <div className="w-full max-w-2xl">
-              <p className="text-sm text-muted-foreground text-center mb-3">Choose a pose:</p>
+              <p className="text-sm text-muted-foreground text-center mb-3">
+                Choose a pose:
+              </p>
               <div className="flex flex-wrap gap-2 justify-center">
                 {labels.map((label) => {
                   const isUsed = usedLabels.includes(label);
                   const isSelected = selectedLabel === label;
-                  
+
                   return (
                     <Button
                       key={label}
-                      variant={isUsed ? 'labelUsed' : isSelected ? 'labelSelected' : 'label'}
+                      variant={
+                        isUsed
+                          ? "labelUsed"
+                          : isSelected
+                          ? "labelSelected"
+                          : "label"
+                      }
                       size="lg"
                       disabled={isUsed || !!capturedImage}
                       onClick={() => handleLabelSelect(label)}

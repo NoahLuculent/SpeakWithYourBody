@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Fireworks } from '@/components/Fireworks';
-import { ConfettiEffect } from '@/components/ConfettiEffect';
-import { getGameState, clearGameState, CapturedImage } from '@/lib/gameStore';
-import { Trophy, RotateCcw, Sparkles, Home } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Fireworks } from "@/components/Fireworks";
+import { ConfettiEffect } from "@/components/ConfettiEffect";
+import { getGameState, clearGameState, CapturedImage } from "@/lib/gameStore";
+import { Trophy, RotateCcw, Sparkles, Home } from "lucide-react";
 
 const Score = () => {
   const navigate = useNavigate();
@@ -31,24 +31,27 @@ const Score = () => {
     const modelUrl = getGameState().modelUrl;
     clearGameState();
     saveGameState({ modelUrl });
-    navigate('/game');
+    navigate("/game");
   };
 
   const handleGoHome = () => {
     clearGameState();
-    navigate('/');
+    navigate("/");
   };
 
   // Helper to save game state with model URL preserved
   const saveGameState = (state: { modelUrl: string }) => {
-    localStorage.setItem('teachable-machine-game-state', JSON.stringify({
-      ...state,
-      score: 0,
-      timeBonus: 0,
-      capturedImages: [],
-      labels: [],
-      usedLabels: [],
-    }));
+    localStorage.setItem(
+      "teachable-machine-game-state",
+      JSON.stringify({
+        ...state,
+        score: 0,
+        timeBonus: 0,
+        capturedImages: [],
+        labels: [],
+        usedLabels: [],
+      })
+    );
   };
 
   return (
@@ -66,7 +69,7 @@ const Score = () => {
             </span>
             <Sparkles className="w-6 h-6 text-primary animate-sparkle" />
           </div>
-          
+
           <h1 className="font-display text-4xl md:text-5xl font-bold text-gold-gradient mb-2">
             Congratulations!
           </h1>
@@ -74,7 +77,10 @@ const Score = () => {
 
         {/* Captured Images Gallery */}
         {capturedImages.length > 0 && (
-          <div className="w-full max-w-4xl mb-8 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <div
+            className="w-full max-w-4xl mb-8 animate-fade-in"
+            style={{ animationDelay: "0.2s" }}
+          >
             <h2 className="font-display text-2xl font-semibold text-foreground text-center mb-6">
               Your Poses
             </h2>
@@ -102,14 +108,17 @@ const Score = () => {
         )}
 
         {/* Score Display */}
-        <div className="glass-card p-8 rounded-2xl text-center gold-glow animate-scale-in" style={{ animationDelay: '0.4s' }}>
+        <div
+          className="glass-card p-8 rounded-2xl text-center gold-glow animate-scale-in"
+          style={{ animationDelay: "0.4s" }}
+        >
           <Trophy className="w-16 h-16 text-primary mx-auto mb-4" />
-          
+
           <p className="text-muted-foreground text-lg mb-2">Final Score</p>
           <p className="font-display text-6xl md:text-7xl font-bold text-gold-gradient mb-4">
             {score.toFixed(1)}
           </p>
-          
+
           {timeBonus > 0 && (
             <p className="text-sm text-muted-foreground">
               Includes +{timeBonus.toFixed(1)} time bonus!
@@ -118,13 +127,19 @@ const Score = () => {
 
           <div className="mt-6 pt-6 border-t border-border/50">
             <p className="text-muted-foreground">
-              Poses matched: <span className="text-primary font-bold">{capturedImages.length}</span>
+              Poses matched:{" "}
+              <span className="text-primary font-bold">
+                {capturedImages.length}
+              </span>
             </p>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 mt-8 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+        <div
+          className="flex flex-col sm:flex-row gap-4 mt-8 animate-fade-in"
+          style={{ animationDelay: "0.6s" }}
+        >
           <Button variant="gold" size="xl" onClick={handlePlayAgain}>
             <RotateCcw className="w-5 h-5" />
             Play Again
@@ -138,7 +153,7 @@ const Score = () => {
         {/* Year decoration */}
         <div className="fixed bottom-0 left-0 right-0 text-center pb-4 pointer-events-none">
           <span className="font-display text-[8rem] md:text-[12rem] font-bold text-primary/5 select-none">
-            2025
+            2026
           </span>
         </div>
       </div>
