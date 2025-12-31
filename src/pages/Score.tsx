@@ -78,13 +78,13 @@ const Score = () => {
         {/* Captured Images Gallery */}
         {capturedImages.length > 0 && (
           <div
-            className="w-full max-w-4xl mb-8 animate-fade-in"
+            className="w-full max-w-4xl mb-8 animate-fade-in text-center"
             style={{ animationDelay: "0.2s" }}
           >
             <h2 className="font-display text-2xl font-semibold text-foreground text-center mb-6">
               Your Poses
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="inline-grid grid-cols-4 gap-4">
               {capturedImages.map((capture, index) => (
                 <div
                   key={index}

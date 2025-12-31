@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Fireworks } from "@/components/Fireworks";
 import { SuccessAnimation } from "@/components/SuccessAnimation";
-import { ConfettiEffect } from "@/components/ConfettiEffect";
 import { CorrectMark } from "@/components/CorrectMark";
 import { getGameState, saveGameState, addCapturedImage } from "@/lib/gameStore";
 import { Progress } from "@/components/ui/progress";
@@ -47,7 +45,6 @@ const Game = () => {
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [isLoading, setIsLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [showCorrectMark, setShowCorrectMark] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [gameActive, setGameActive] = useState(false);
@@ -157,9 +154,10 @@ const Game = () => {
       clearInterval(timerRef.current);
     }
 
-    // Calculate time bonus (0.1 points per 10 seconds remaining)
-    const timeBonus = Math.floor(timeLeft / 10) * 0.1;
-    const finalScore = score + timeBonus;
+    const gameState = getGameState();
+    // Calculate time bonus (1 point per 10 seconds remaining)
+    const timeBonus = Math.floor(timeLeft / 10);
+    const finalScore = gameState.score + timeBonus;
 
     saveGameState({
       score: finalScore,
@@ -167,7 +165,7 @@ const Game = () => {
     });
 
     navigate("/score");
-  }, [navigate, score, timeLeft]);
+  }, [navigate, timeLeft]);
 
   // Game timer
   useEffect(() => {
@@ -197,31 +195,28 @@ const Game = () => {
     const canvas = webcam.canvas;
     const imageData = canvas.toDataURL("image/png");
 
-    // Save captured image
-    addCapturedImage(selectedLabel, imageData);
-    setCapturedImage(imageData);
-    setShowSuccess(true);
-    setShowConfetti(true);
-    setShowCorrectMark(true);
+    // Save captured image and update score if it's a new pose
+    const isNewCapture = addCapturedImage(selectedLabel, imageData);
 
-    // Update score
-    setScore((prev) => prev + 1);
+    if (isNewCapture) {
+      setCapturedImage(imageData);
+      setShowSuccess(true);
+      setShowCorrectMark(true);
+      setScore((prev) => prev + 1);
+      setUsedLabels((prev) => [...prev, selectedLabel]);
 
-    // Mark label as used
-    setUsedLabels((prev) => [...prev, selectedLabel]);
+      // Clear selection after display time
+      captureTimeoutRef.current = setTimeout(() => {
+        setCapturedImage(null);
+        setSelectedLabel(null);
 
-    // Clear selection after display time
-    captureTimeoutRef.current = setTimeout(() => {
-      setCapturedImage(null);
-      setSelectedLabel(null);
-      setShowConfetti(false);
-
-      // Check if all labels are used
-      const newUsedLabels = [...usedLabels, selectedLabel];
-      if (newUsedLabels.length >= labels.length) {
-        endGame();
-      }
-    }, CAPTURE_DISPLAY_TIME);
+        // Check if all labels are used
+        const newUsedLabels = [...usedLabels, selectedLabel];
+        if (newUsedLabels.length >= labels.length) {
+          endGame();
+        }
+      }, CAPTURE_DISPLAY_TIME);
+    }
   }, [webcam, selectedLabel, endGame, labels.length, usedLabels]);
 
   // Prediction loop
@@ -359,12 +354,10 @@ const Game = () => {
     <div className="min-h-screen relative overflow-hidden bg-background">
       {/* Hidden div for the webcam video element, always rendered */}
       <div ref={webcamRef} style={{ position: "absolute", top: "-9999px" }} />
-      <Fireworks />
       <SuccessAnimation
         show={showSuccess}
         onComplete={() => setShowSuccess(false)}
       />
-      <ConfettiEffect active={showConfetti} />
       <CorrectMark
         show={showCorrectMark}
         onComplete={() => setShowCorrectMark(false)}

@@ -42,8 +42,12 @@ export const clearGameState = () => {
   localStorage.removeItem(STORAGE_KEY);
 };
 
-export const addCapturedImage = (label: string, imageData: string) => {
+export const addCapturedImage = (label: string, imageData: string): boolean => {
   const state = getGameState();
+  // Prevent duplicate captures for the same label
+  if (state.usedLabels.includes(label)) {
+    return false;
+  }
   state.capturedImages.push({
     label,
     imageData,
@@ -52,4 +56,5 @@ export const addCapturedImage = (label: string, imageData: string) => {
   state.usedLabels.push(label);
   state.score += 1;
   saveGameState(state);
+  return true;
 };
