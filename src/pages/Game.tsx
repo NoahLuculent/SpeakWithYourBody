@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { SuccessAnimation } from "@/components/SuccessAnimation";
 import { CorrectMark } from "@/components/CorrectMark";
 import { getGameState, saveGameState, addCapturedImage } from "@/lib/gameStore";
 import { Progress } from "@/components/ui/progress";
@@ -44,11 +43,12 @@ const Game = () => {
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [isLoading, setIsLoading] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
+
   const [showCorrectMark, setShowCorrectMark] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [gameActive, setGameActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [predictionPaused, setPredictionPaused] = useState(false);
 
   const animationFrameRef = useRef<number>();
   const timerRef = useRef<NodeJS.Timeout>();
@@ -199,8 +199,8 @@ const Game = () => {
     const isNewCapture = addCapturedImage(selectedLabel, imageData);
 
     if (isNewCapture) {
+      setPredictionPaused(true);
       setCapturedImage(imageData);
-      setShowSuccess(true);
       setShowCorrectMark(true);
       setScore((prev) => prev + 1);
       setUsedLabels((prev) => [...prev, selectedLabel]);
@@ -221,7 +221,8 @@ const Game = () => {
 
   // Prediction loop
   const predict = useCallback(async () => {
-    if (!model || !webcam || !gameActive || !selectedLabel) return;
+    if (!model || !webcam || !gameActive || !selectedLabel || predictionPaused)
+      return;
 
     webcam.update();
     const { pose, posenetOutput } = await model.estimatePose(webcam.canvas);
@@ -311,7 +312,7 @@ const Game = () => {
   ]);
 
   useEffect(() => {
-    if (gameActive && selectedLabel && !capturedImage) {
+    if (gameActive && selectedLabel && !capturedImage && !predictionPaused) {
       animationFrameRef.current = requestAnimationFrame(predict);
     }
 
@@ -320,7 +321,7 @@ const Game = () => {
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [predict, gameActive, selectedLabel, capturedImage]);
+  }, [predict, gameActive, selectedLabel, capturedImage, predictionPaused]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -332,6 +333,7 @@ const Game = () => {
     if (usedLabels.includes(label) || capturedImage) return;
     setSelectedLabel(label);
     setCurrentPrediction(0);
+    setPredictionPaused(false);
   };
 
   if (error) {
@@ -354,10 +356,6 @@ const Game = () => {
     <div className="min-h-screen relative overflow-hidden bg-background">
       {/* Hidden div for the webcam video element, always rendered */}
       <div ref={webcamRef} style={{ position: "absolute", top: "-9999px" }} />
-      <SuccessAnimation
-        show={showSuccess}
-        onComplete={() => setShowSuccess(false)}
-      />
       <CorrectMark
         show={showCorrectMark}
         onComplete={() => setShowCorrectMark(false)}

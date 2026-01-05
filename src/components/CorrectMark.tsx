@@ -14,7 +14,7 @@ export const CorrectMark = ({ show, onComplete }: CorrectMarkProps) => {
       const timer = setTimeout(() => {
         setVisible(false);
         onComplete?.();
-      }, 1000);
+      }, 500);
       return () => clearTimeout(timer);
     }
   }, [show, onComplete]);
