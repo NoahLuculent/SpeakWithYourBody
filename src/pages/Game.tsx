@@ -199,7 +199,6 @@ const Game = () => {
     const isNewCapture = addCapturedImage(selectedLabel, imageData);
 
     if (isNewCapture) {
-      webcam.stop(); // Stop webcam
       setPredictionPaused(true);
       setCapturedImage(imageData);
       setShowCorrectMark(true);
@@ -210,7 +209,7 @@ const Game = () => {
       captureTimeoutRef.current = setTimeout(() => {
         setCapturedImage(null);
         setSelectedLabel(null);
-
+        setPredictionPaused(false); // Resume prediction for the next label
         // Check if all labels are used
         const newUsedLabels = [...usedLabels, selectedLabel];
         if (newUsedLabels.length >= labels.length) {
