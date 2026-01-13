@@ -51,11 +51,11 @@ const Index = () => {
           </div>
 
           <h1 className="font-display text-5xl md:text-7xl font-bold mb-4 text-gold-gradient">
-            Pose Challenge
+            Speak with Your Body
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-md mx-auto">
-            Strike a pose, beat the clock, and celebrate the New Year!
+            Strike a pose, find each other!
           </p>
         </div>
 

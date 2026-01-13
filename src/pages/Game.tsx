@@ -26,8 +26,8 @@ const waitForTmPose = async (timeoutMs = 8000) => {
 };
 
 const GAME_DURATION = 180; // 3 minutes in seconds
-const THRESHOLD = 0.7; // 70%
-const CAPTURE_DISPLAY_TIME = 3000; // 3 seconds
+const THRESHOLD = 0.95; // 95%
+const CAPTURE_DISPLAY_TIME = 2000; // 2 seconds
 
 const Game = () => {
   const navigate = useNavigate();
@@ -199,6 +199,7 @@ const Game = () => {
     const isNewCapture = addCapturedImage(selectedLabel, imageData);
 
     if (isNewCapture) {
+      webcam.stop(); // Stop webcam
       setPredictionPaused(true);
       setCapturedImage(imageData);
       setShowCorrectMark(true);
@@ -333,7 +334,7 @@ const Game = () => {
     if (usedLabels.includes(label) || capturedImage) return;
     setSelectedLabel(label);
     setCurrentPrediction(0);
-    setPredictionPaused(false);
+    setPredictionPaused(false); // Pause prediction initially
   };
 
   if (error) {
@@ -408,12 +409,14 @@ const Game = () => {
               <div className="glass-card p-2 rounded-2xl gold-glow">
                 <div className="relative w-[400px] h-[400px] rounded-xl overflow-hidden bg-midnight-light">
                   {/* Pose overlay */}
-                  <canvas
-                    ref={canvasRef}
-                    width={400}
-                    height={400}
-                    className="absolute inset-0"
-                  />
+                  {!capturedImage && (
+                    <canvas
+                      ref={canvasRef}
+                      width={400}
+                      height={400}
+                      className="absolute inset-0"
+                    />
+                  )}
 
                   {/* Captured image overlay */}
                   {capturedImage && (
