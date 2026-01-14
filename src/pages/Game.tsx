@@ -156,7 +156,7 @@ const Game = () => {
 
     const gameState = getGameState();
     // Calculate time bonus (1 point per 10 seconds remaining)
-    const timeBonus = Math.floor(timeLeft / 10);
+    const timeBonus = Math.floor(timeLeft / 100);
     const finalScore = gameState.score + timeBonus;
 
     saveGameState({
