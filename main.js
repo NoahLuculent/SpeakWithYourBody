@@ -6,7 +6,7 @@ if (page.includes("game.html")) {
 
     let model, webcam, ctx, labelContainer, selectedLabel, probabilityBar;
     let score = 0;
-    let timeLeft = 180;
+    let timeLeft = 150;
     let labels = [];
     let selectedLabelName = null;
     let completedLabels = [];
